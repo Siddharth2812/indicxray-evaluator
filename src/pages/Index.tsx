@@ -169,14 +169,15 @@ const Index = (props: Props) => {
         console.log("Fetched existing evaluations:", existingEvaluations);
         
         // Map the evaluations to the correct format
-        const defaultScores = activeRecord.modelOutputs.map(output => {
+        const defaultScores = Array.from({ length: 3 }, (_, index) => {
+          const output = activeRecord.modelOutputs[index];
           // Find existing evaluations for this model output
-          const modelEvaluations = existingEvaluations.filter(
+          const modelEvaluations = output ? existingEvaluations.filter(
             evaluation => evaluation.model_response === output.responseId
-          );
+          ) : [];
           
           return {
-            responseId: output.responseId,
+            responseId: output?.responseId || `model-${index + 1}`,
             metrics: metrics.map(metric => {
               // Find existing evaluation for this metric
               const existingValue = modelEvaluations.find(
@@ -310,7 +311,7 @@ const Index = (props: Props) => {
       </header>
 
       <div className="flex-1 flex flex-col p-4 space-y-4 overflow-auto">
-        <div className="flex gap-4 h-[calc(65vh-2rem)]">
+        <div className="flex gap-4 h-[calc(60vh-2rem)]">
           <div className="w-2/5">
             <ImageViewer
               currentImage={activeRecord.imageUrl}
@@ -335,17 +336,22 @@ const Index = (props: Props) => {
           </div>
         </div>
 
-        <div className="flex-1 min-h-[calc(35vh-6rem)] flex flex-col">
-          <EvaluationMetrics
-            activeRecordId={activeRecord.id || ''}
-            metrics={metrics}
-            isSubmitting={isSubmitting}
-            modelResponses={modelReports.map((report, index) => ({
-              id: report.responseId,
-              model_name: `Model ${index + 1}`,
-              response: report
-            }))}
-          />
+        <div className="flex-1 min-h-[calc(40vh-6rem)] flex flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <EvaluationMetrics
+              activeRecordId={activeRecord.id || ''}
+              metrics={metrics}
+              isSubmitting={isSubmitting}
+              modelResponses={Array.from({ length: 3 }, (_, index) => {
+                const report = modelReports[index];
+                return {
+                  id: report?.responseId || `model-${index + 1}`,
+                  model_name: `Model ${index + 1}`,
+                  response: report || { responseId: `model-${index + 1}`, response: '' }
+                };
+              })}
+            />
+          </div>
           
           <div className="mt-4 flex justify-center">
             <Button 

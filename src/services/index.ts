@@ -272,20 +272,41 @@ async function getRecords(id: string): Promise<{ data: Record[] }> {
         })),
         groundTruth: (() => {
           try {
-            if (typeof data.groundTruth === 'string') {
-              const parsed = JSON.parse(data.groundTruth);
+            // If it's already an object with findings/impressions, use it directly
+            if (typeof data.groundTruth === 'object' && data.groundTruth !== null) {
               return {
-                findings: parsed.findings || '',
-                impressions: parsed.impression || ''
+                findings: data.groundTruth.findings || '',
+                impressions: data.groundTruth.impressions || data.groundTruth.impression || ''
               };
             }
-            return {
-              findings: data.groundTruth?.findings || '',
-              impressions: data.groundTruth?.impression || ''
-            };
+
+            // If it's a string, try to parse as JSON first
+            if (typeof data.groundTruth === 'string') {
+              // Check if it looks like JSON
+              if (data.groundTruth.trim().startsWith('{')) {
+                const parsed = JSON.parse(data.groundTruth);
+                return {
+                  findings: parsed.findings || '',
+                  impressions: parsed.impressions || parsed.impression || ''
+                };
+              } else {
+                // If it's not JSON, treat it as plain text and put it in findings
+                return {
+                  findings: data.groundTruth || '',
+                  impressions: ''
+                };
+              }
+            }
+
+            // Fallback to empty strings if no valid data
+            return { findings: '', impressions: '' };
           } catch (err) {
             console.error('Error parsing ground truth:', err);
-            return { findings: '', impressions: '' };
+            // If JSON parsing fails, treat the entire string as findings
+            return { 
+              findings: typeof data.groundTruth === 'string' ? data.groundTruth : '',
+              impressions: '' 
+            };
           }
         })(),
         models: [],
@@ -326,20 +347,41 @@ async function getRecords(id: string): Promise<{ data: Record[] }> {
           })),
           groundTruth: (() => {
             try {
-              if (typeof caseItem.groundTruth === 'string') {
-                const parsed = JSON.parse(caseItem.groundTruth);
+              // If it's already an object with findings/impressions, use it directly
+              if (typeof caseItem.groundTruth === 'object' && caseItem.groundTruth !== null) {
                 return {
-                  findings: parsed.findings || '',
-                  impressions: parsed.impression || ''
+                  findings: caseItem.groundTruth.findings || '',
+                  impressions: caseItem.groundTruth.impressions || caseItem.groundTruth.impression || ''
                 };
               }
-              return {
-                findings: caseItem.groundTruth?.findings || '',
-                impressions: caseItem.groundTruth?.impression || ''
-              };
+
+              // If it's a string, try to parse as JSON first
+              if (typeof caseItem.groundTruth === 'string') {
+                // Check if it looks like JSON
+                if (caseItem.groundTruth.trim().startsWith('{')) {
+                  const parsed = JSON.parse(caseItem.groundTruth);
+                  return {
+                    findings: parsed.findings || '',
+                    impressions: parsed.impressions || parsed.impression || ''
+                  };
+                } else {
+                  // If it's not JSON, treat it as plain text and put it in findings
+                  return {
+                    findings: caseItem.groundTruth || '',
+                    impressions: ''
+                  };
+                }
+              }
+
+              // Fallback to empty strings if no valid data
+              return { findings: '', impressions: '' };
             } catch (err) {
               console.error('Error parsing ground truth:', err);
-              return { findings: '', impressions: '' };
+              // If JSON parsing fails, treat the entire string as findings
+              return { 
+                findings: typeof caseItem.groundTruth === 'string' ? caseItem.groundTruth : '',
+                impressions: '' 
+              };
             }
           })(),
           models: [],

@@ -30,8 +30,11 @@ const useEvalutationStore = create<EvaluationStore>()((set) => ({
   setEvaluation: (idx, payload) =>
     set((state) => {
       if (!state.evaluation[idx]) {
-        console.error(`Evaluation data for id ${idx} not found`);
-        return state;
+        // Initialize evaluation data for this ID if it doesn't exist
+        state.evaluation[idx] = Array.from({ length: 3 }, (_, index) => ({
+          responseId: `model-${index + 1}`,
+          metrics: []
+        }));
       }
 
       const newEvaluation = { ...state.evaluation };
@@ -40,8 +43,18 @@ const useEvalutationStore = create<EvaluationStore>()((set) => ({
       );
 
       if (modelIndex === -1) {
-        console.error(`Response ${payload.responseId} not found in evaluation`);
-        return state;
+        // Add the model if it doesn't exist
+        newEvaluation[idx].push({
+          responseId: payload.responseId,
+          metrics: [{
+            id: payload.metricId,
+            name: '',
+            value: payload.value
+          }]
+        });
+        return {
+          evaluation: newEvaluation,
+        };
       }
 
       const metricIndex = newEvaluation[idx][modelIndex].metrics.findIndex(
@@ -49,11 +62,15 @@ const useEvalutationStore = create<EvaluationStore>()((set) => ({
       );
 
       if (metricIndex === -1) {
-        console.error(`Metric ${payload.metricId} not found in model ${payload.responseId}`);
-        return state;
+        // Add the metric if it doesn't exist
+        newEvaluation[idx][modelIndex].metrics.push({
+          id: payload.metricId,
+          name: '',
+          value: payload.value
+        });
+      } else {
+        newEvaluation[idx][modelIndex].metrics[metricIndex].value = payload.value;
       }
-
-      newEvaluation[idx][modelIndex].metrics[metricIndex].value = payload.value;
 
       return {
         evaluation: newEvaluation,

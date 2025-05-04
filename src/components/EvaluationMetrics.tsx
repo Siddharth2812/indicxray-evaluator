@@ -221,9 +221,11 @@ export const EvaluationMetrics: React.FC<EvaluationMetricsProps> = ({
           </thead>
 
           <tbody>
-            {activeEvaluation?.map((model) => {
-              const modelResponse = modelResponses.find(r => r.id === model.responseId);
-              if (!modelResponse) return null;
+            {modelResponses.map((modelResponse) => {
+              const model = activeEvaluation?.find(m => m.responseId === modelResponse.id) || {
+                responseId: modelResponse.id,
+                metrics: metrics.map(m => ({ id: m.id, name: m.name, value: null }))
+              };
 
               return (
                 <tr
