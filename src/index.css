@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%; /* Dark background */
+    --foreground: 0 0% 98%; /* Light text */
+
+    --card: 240 6% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 6% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 217.2 91.2% 59.8%; /* Medical blue */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 5.9% 10%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 213 94% 68%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --radius: 0.5rem;
+
+    /* Sidebar specific colors */
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 213 94% 68%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-medical-darkest-gray text-foreground;
+    height: 100vh;
+    width: 100%;
+  }
+
+  select {
+    background: transparent;
+    text-align: center;
+  }
+
+  /* Custom scrollbar for report panels */
+  .report-panel::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .report-panel::-webkit-scrollbar-track {
+    @apply bg-medical-darker-gray;
+  }
+
+  .report-panel::-webkit-scrollbar-thumb {
+    @apply bg-medical-gray rounded-full;
+  }
+
+  /* Hover effect for navigation buttons */
+  .nav-button {
+    @apply transition-all duration-200 hover:bg-medical-blue/30;
+  }
+
+  /* Score circle styling */
+  .score-circle {
+    @apply flex items-center justify-center rounded-full w-10 h-10 text-white font-bold text-sm;
+  }
+
+  #root {
+    height: 100%;
+  }
+}
