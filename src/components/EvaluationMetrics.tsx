@@ -69,6 +69,19 @@ interface EvaluationProgress {
   status: string
 }
 
+// Helper function to get score color
+const getScoreColor = (score: number | null): string => {
+  if (score === null) return '';
+  const colors = {
+    1: 'bg-red-500/20 text-red-500',
+    2: 'bg-orange-500/20 text-orange-500',
+    3: 'bg-yellow-500/20 text-yellow-500',
+    4: 'bg-lime-500/20 text-lime-500',
+    5: 'bg-green-500/20 text-green-500'
+  };
+  return colors[score as keyof typeof colors] || '';
+};
+
 export const EvaluationMetrics: React.FC<EvaluationMetricsProps> = ({
   activeRecordId,
   metrics,
@@ -241,11 +254,25 @@ export const EvaluationMetrics: React.FC<EvaluationMetricsProps> = ({
                             const newValue = val === '' ? null : Number(val);
                             updateEvaluation(model.responseId, metric.id, newValue);
                           }}
+                          className={cn(
+                            "w-20 h-8 rounded text-center",
+                            getScoreColor(score),
+                            "border border-medical-dark-gray/30",
+                            "focus:outline-none focus:ring-2 focus:ring-medical-blue",
+                            "disabled:opacity-50"
+                          )}
                         >
                           <option value="">--</option>
-                          {[...Array(5)].map((_, i) => (
-                            <option key={i} value={i + 1}>
-                              {i + 1}
+                          {[1, 2, 3, 4, 5].map((value) => (
+                            <option 
+                              key={value} 
+                              value={value}
+                              className={cn(
+                                getScoreColor(value),
+                                "font-medium"
+                              )}
+                            >
+                              {value}
                             </option>
                           ))}
                         </select>
