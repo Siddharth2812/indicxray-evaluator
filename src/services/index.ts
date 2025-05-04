@@ -12,15 +12,6 @@ const instance = axios.create({
   }
 })
 
-// Add request interceptor to ensure api prefix
-instance.interceptors.request.use((config) => {
-  // If we're not already hitting an /api endpoint, add it
-  if (!config.url?.startsWith('/api/')) {
-    config.url = `api/${config.url}`
-  }
-  return config
-})
-
 // Add response interceptor for better error handling
 instance.interceptors.response.use(
   (response) => response,
@@ -384,34 +375,61 @@ interface BatchSubmissionData {
   }[];
 }
 
-async function setRecords(submissionData: BatchSubmissionData) {
+// Function to update a single evaluation
+async function updateSingleEvaluation(data: {
+  caseId: string;
+  responseId: string;
+  metricId: string;
+  evaluatorId: string;
+  score: number;
+}) {
   try {
-    const response = await instance.post('evaluations/submit', submissionData);
+    const response = await instance.post('cases/evaluations/update/', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating evaluation:', error);
+    throw error;
+  }
+}
+
+// Function to get existing evaluations for a case
+async function getExistingEvaluations(caseId: string) {
+  try {
+    const response = await instance.get(`cases/${caseId}/evaluations`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching evaluations:', error);
+    return [];
+  }
+}
+
+// Update the setRecords function to use the correct endpoint
+async function setRecords(submissionData: {
+  caseId: string;
+  responseId: string;
+  metricId: string;
+  evaluatorId: string;
+  score: number;
+}) {
+  try {
+    const response = await instance.post('cases/evaluations/update/', submissionData);
     
-    if (response.data.success) {
+    if (response.data.status === 'in_progress' || response.data.status === 'completed') {
       return { 
         success: true, 
-        partial: false 
+        partial: response.data.status === 'in_progress',
+        progress: response.data.progress
       };
     }
     
     return {
       success: false,
       partial: true,
-      message: response.data.message || "Failed to submit some evaluations",
-      errors: response.data.errors || []
+      message: response.data.message || "Failed to submit evaluation",
+      errors: []
     };
   } catch (error) {
-    if (error.response?.data) {
-      console.error('Error setting records. Response data:', JSON.stringify(error.response.data, null, 2));
-      
-      if (error.response.data.non_field_errors) {
-        console.error('Non-field errors:', error.response.data.non_field_errors);
-      }
-    } else {
-      console.error('Error setting records:', error);
-    }
-    
+    console.error('Error setting records:', error);
     throw error;
   }
 }
@@ -453,5 +471,7 @@ export {
   getAllCases,
   getUserDetails,
   isSupervisor,
-  getMetrics
+  getMetrics,
+  updateSingleEvaluation,
+  getExistingEvaluations
 }

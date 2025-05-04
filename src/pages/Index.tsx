@@ -7,9 +7,8 @@ import { addEmptyMetrics, shuffle } from '@/lib/utils'
 import { Record, Metric } from '@/types'
 import useEvalutationStore from '@/stores/evaluation'
 import { Button } from '@/components/ui/button'
-import { setRecords, getMetrics } from '@/services'
+import { setRecords, getMetrics, getUserDetails, getExistingEvaluations, updateSingleEvaluation } from '@/services'
 import { useToast } from '@/hooks/use-toast'
-import { getUserDetails } from '@/services'
 import { useNavigate } from 'react-router-dom'
 
 interface Props {
@@ -165,17 +164,9 @@ const Index = (props: Props) => {
       try {
         setIsSubmitting(true);
         
-        // First fetch existing evaluations for this case
-        const response = await fetch(`/api/cases/${activeRecord.id}/evaluations`);
-        let existingEvaluations = [];
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Fetched existing evaluations:", data);
-          existingEvaluations = data || [];
-        } else {
-          console.warn("Failed to fetch existing evaluations, using empty array");
-        }
+        // Fetch existing evaluations
+        const existingEvaluations = await getExistingEvaluations(activeRecord.id);
+        console.log("Fetched existing evaluations:", existingEvaluations);
         
         // Map the evaluations to the correct format
         const defaultScores = activeRecord.modelOutputs.map(output => {
@@ -229,6 +220,10 @@ const Index = (props: Props) => {
       const urlParams = new URLSearchParams(window.location.search);
       const evaluatorId = urlParams.get('doctorId');
 
+      if (!evaluatorId) {
+        throw new Error('No evaluator ID found');
+      }
+
       // Get current evaluations from the store
       const currentEvaluations = useEvalutationStore.getState().evaluation[activeRecord.id];
       
@@ -236,61 +231,36 @@ const Index = (props: Props) => {
         throw new Error('No evaluations found for submission');
       }
 
-      // Format data according to API contract
-      const evaluations = currentEvaluations.flatMap(evaluation => 
-        evaluation.metrics.map(metric => ({
-          caseId: activeRecord.id,
-          responseId: evaluation.responseId,
-          metricId: metric.id,
-          evaluatorId,
-          score: metric.value
-        }))
-      ).filter(evaluation => evaluation.score !== null && evaluation.score > 0);
-
-      // Validate scores before submission
-      const hasInvalidScores = evaluations.some(
-        evaluation => !evaluation.score || evaluation.score < 1 || evaluation.score > 5
+      // Submit each evaluation individually
+      const submissionPromises = currentEvaluations.flatMap(evaluation => 
+        evaluation.metrics
+          .filter(metric => metric.value !== null && metric.value > 0)
+          .map(metric => updateSingleEvaluation({
+            caseId: activeRecord.id,
+            responseId: evaluation.responseId,
+            metricId: metric.id,
+            evaluatorId,
+            score: metric.value as number
+          }))
       );
 
-      if (hasInvalidScores) {
-        toast({
-          title: "Validation Error",
-          description: "Please ensure all metrics have valid scores (1-5)",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Submit each evaluation
-      const results = await Promise.all(
-        evaluations.map(evaluation =>
-          fetch('/api/cases/evaluations/update/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(evaluation),
-          })
-        )
-      );
-
-      // Check if any submissions failed
-      const failedSubmissions = results.filter(r => !r.ok).length;
+      const results = await Promise.all(submissionPromises);
       
-      if (failedSubmissions > 0) {
-        toast({
-          title: "Partial Success",
-          description: `${results.length - failedSubmissions} evaluations submitted successfully, ${failedSubmissions} failed.`,
-          variant: "default",
-        });
-      } else {
+      // Check the last result for the final status
+      const lastResult = results[results.length - 1];
+      
+      if (lastResult.status === 'completed') {
         toast({
           title: "Success",
           description: "All evaluations submitted successfully",
         });
-        
-        // Mark this record as done but don't reset the evaluations
         setDoneForId(activeRecord.id, true);
+      } else {
+        toast({
+          title: "Partial Success",
+          description: `${lastResult.progress.completed} of ${lastResult.progress.total} evaluations completed`,
+          variant: "default",
+        });
       }
     } catch (error) {
       console.error("Error submitting evaluations:", error);

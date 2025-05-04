@@ -46,12 +46,13 @@ export interface ModelScore {
 }
 
 interface ModelResponse {
-  id: string
-  model_name: string
+  id: string;
+  model_name: string;
   response: {
-    responseId: string
-    text: string
-  }
+    responseId: string;
+    response: string;
+    evaluations?: APIEvaluation[];
+  };
 }
 
 interface EvaluationMetricsProps {
