@@ -221,69 +221,71 @@ export const EvaluationMetrics: React.FC<EvaluationMetricsProps> = ({
           </thead>
 
           <tbody>
-            {modelResponses.map((modelResponse) => {
-              const model = activeEvaluation?.find(m => m.responseId === modelResponse.id) || {
-                responseId: modelResponse.id,
-                metrics: metrics.map(m => ({ id: m.id, name: m.name, value: null }))
-              };
+            {modelResponses
+              .filter(modelResponse => modelResponse.response && modelResponse.response.response)
+              .map((modelResponse) => {
+                const model = activeEvaluation?.find(m => m.responseId === modelResponse.id) || {
+                  responseId: modelResponse.id,
+                  metrics: metrics.map(m => ({ id: m.id, name: m.name, value: null }))
+                };
 
-              return (
-                <tr
-                  key={model.responseId}
-                  className="border-b border-medical-dark-gray/20"
-                >
-                  <td className="p-3 font-medium text-left">
-                    {modelResponse.model_name}
-                  </td>
+                return (
+                  <tr
+                    key={model.responseId}
+                    className="border-b border-medical-dark-gray/20"
+                  >
+                    <td className="p-3 font-medium text-left">
+                      {modelResponse.model_name}
+                    </td>
 
-                  {metrics.map((metric) => {
-                    const score = model.metrics.find(
-                      (x) => x.id === metric.id
-                    )?.value;
+                    {metrics.map((metric) => {
+                      const score = model.metrics.find(
+                        (x) => x.id === metric.id
+                      )?.value;
 
-                    return (
-                      <td
-                        key={`${model.responseId}-${metric.id}`}
-                        className="p-3 text-center"
-                      >
-                        <select
-                          value={score ?? ''}
-                          name="metrics"
-                          id="rate-model-output"
-                          disabled={isSubmitting}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const newValue = val === '' ? null : Number(val);
-                            updateEvaluation(model.responseId, metric.id, newValue);
-                          }}
-                          className={cn(
-                            "w-20 h-8 rounded text-center",
-                            getScoreColor(score),
-                            "border border-medical-dark-gray/30",
-                            "focus:outline-none focus:ring-2 focus:ring-medical-blue",
-                            "disabled:opacity-50"
-                          )}
+                      return (
+                        <td
+                          key={`${model.responseId}-${metric.id}`}
+                          className="p-3 text-center"
                         >
-                          <option value="">--</option>
-                          {[1, 2, 3, 4, 5].map((value) => (
-                            <option 
-                              key={value} 
-                              value={value}
-                              className={cn(
-                                getScoreColor(value),
-                                "font-medium"
-                              )}
-                            >
-                              {value}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
+                          <select
+                            value={score ?? ''}
+                            name="metrics"
+                            id="rate-model-output"
+                            disabled={isSubmitting}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const newValue = val === '' ? null : Number(val);
+                              updateEvaluation(model.responseId, metric.id, newValue);
+                            }}
+                            className={cn(
+                              "w-20 h-8 rounded text-center",
+                              getScoreColor(score),
+                              "border border-medical-dark-gray/30",
+                              "focus:outline-none focus:ring-2 focus:ring-medical-blue",
+                              "disabled:opacity-50"
+                            )}
+                          >
+                            <option value="">--</option>
+                            {[1, 2, 3, 4, 5].map((value) => (
+                              <option 
+                                key={value} 
+                                value={value}
+                                className={cn(
+                                  getScoreColor(value),
+                                  "font-medium"
+                                )}
+                              >
+                                {value}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
