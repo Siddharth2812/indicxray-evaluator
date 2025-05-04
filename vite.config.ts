@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => ({
         target: 'https://medical-backend-1056714537361.us-central1.run.app',
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   },
@@ -27,4 +28,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify(mode === 'development' ? '/api' : 'https://medical-backend-1056714537361.us-central1.run.app')
+  }
 }));

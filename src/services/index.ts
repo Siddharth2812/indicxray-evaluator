@@ -2,11 +2,33 @@ import axios from 'axios'
 import { Record, Metric } from '@/types'
 import useEvalutationStore from '@/stores/evaluation'
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://medical-backend-1056714537361.us-central1.run.app'
+
 const instance = axios.create({
-  baseURL: '/api/', // Use the proxied URL instead of direct backend URL
-  timeout: 30000, // Increased timeout to 30 seconds
-  // headers: { 'X-Custom-Header': 'foobar' },
+  baseURL: BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  }
 })
+
+// Add request interceptor to ensure api prefix
+instance.interceptors.request.use((config) => {
+  // If we're not already hitting an /api endpoint, add it
+  if (!config.url?.startsWith('/api/')) {
+    config.url = `api/${config.url}`
+  }
+  return config
+})
+
+// Add response interceptor for better error handling
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response?.data || error.message)
+    throw error
+  }
+)
 
 // Cache for metrics and models data
 let metricsCache = null;
