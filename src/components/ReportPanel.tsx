@@ -56,12 +56,12 @@ export const ReportPanel: React.FC<ReportPanelProps> = ({
               <p className="text-sm">{(report as Report).findings}</p>
             </div>
 
-            <div>
+            {/* <div>
               <h3 className="text-sm font-medium text-medical-gray uppercase mb-1">
                 IMPRESSION:
               </h3>
               <p className="text-sm">{(report as Report).impressions}</p>
-            </div>
+            </div> */}
           </>
         )}
       </div>

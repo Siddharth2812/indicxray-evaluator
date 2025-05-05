@@ -174,7 +174,7 @@ function DoctorCases() {
                   <div className="flex justify-between items-center">
                     <div>
                       <div className="font-medium group-hover:text-white">
-                        Case {index + 1}: {caseItem.image_id}
+                        Case {index + 1}: {caseItem.id}
                       </div>
                       <div className="text-sm text-muted-foreground mt-1 group-hover:text-white/70">
                         Progress: {caseItem.completed_evaluations} of {caseItem.total_evaluations} evaluations completed

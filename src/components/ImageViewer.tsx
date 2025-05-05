@@ -8,19 +8,18 @@ import { cn } from '@/lib/utils'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 
 interface ImageViewerProps {
-  currentImage: string
   currentIndex: number
   onChangeImage: (index: number) => void
   totalImages?: number
 }
 
 export const ImageViewer: React.FC<ImageViewerProps> = ({
-  currentImage,
   currentIndex,
   onChangeImage,
   totalImages = 1,
 }) => {
   const [zoomLevel, setZoomLevel] = useState(1)
+  const [imageError, setImageError] = useState<string | null>(null)
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 0.25, 3))
@@ -28,6 +27,14 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
   const handleZoomOut = () => {
     setZoomLevel((prev) => Math.max(prev - 0.25, 0.5))
+  }
+
+  const handleImageError = () => {
+    setImageError('Failed to load image')
+  }
+
+  const handleImageLoad = () => {
+    setImageError(null)
   }
 
   return (
@@ -62,9 +69,11 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
             <DialogContent className="max-w-4xl w-full p-0 bg-medical-darkest-gray">
               <div className="p-4 flex items-center justify-center">
                 <img
-                  src={currentImage}
+                  src="/metric_score.jpeg"
                   alt="Full size X-ray"
                   className="max-h-[80vh] object-contain"
+                  onError={handleImageError}
+                  onLoad={handleImageLoad}
                 />
               </div>
             </DialogContent>
@@ -73,16 +82,25 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
       </div>
 
       <div className="flex-1 flex items-center justify-center overflow-hidden relative">
-        <div
-          className="transition-transform duration-300 ease-out"
-          style={{ transform: `scale(${zoomLevel})` }}
-        >
-          <img
-            src={currentImage}
-            alt="X-ray image"
-            className="max-w-full max-h-full object-contain"
-          />
-        </div>
+        {imageError ? (
+          <div className="text-medical-red text-center p-4">
+            <p>{imageError}</p>
+            <p className="text-sm text-medical-gray mt-2">Unable to load image</p>
+          </div>
+        ) : (
+          <div
+            className="transition-transform duration-300 ease-out"
+            style={{ transform: `scale(${zoomLevel})` }}
+          >
+            <img
+              src="/metric_score.jpeg"
+              alt="X-ray image"
+              className="max-w-full max-h-full object-contain"
+              onError={handleImageError}
+              onLoad={handleImageLoad}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

@@ -2,7 +2,7 @@ import axios from 'axios'
 import { Record, Metric } from '@/types'
 import useEvalutationStore from '@/stores/evaluation'
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://medical-backend-1056714537361.us-central1.run.app'
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://medical-backend-v2-1056714537361.us-central1.run.app'
 
 const instance = axios.create({
   baseURL: BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`,
